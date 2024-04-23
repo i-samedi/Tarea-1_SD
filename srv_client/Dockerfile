@@ -1,7 +1,7 @@
 FROM python:3.8-slim
 
 COPY ./srv_client /home/app
-FROM grpcio/python:1.51.1
+
 
 WORKDIR /home/app
 

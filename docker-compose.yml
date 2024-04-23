@@ -1,0 +1,70 @@
+version: '3.3'
+
+services:
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: tiago
+      POSTGRES_PASSWORD: tarea11
+      POSTGRES_DB: tarea1
+    ports:
+      - "5432:5432"
+    networks:
+      - my_network
+
+  srv_server:
+    build:
+      context: ./
+      dockerfile: ./srv_server/Dockerfile
+    ports:
+      - "50052:50051"
+    networks:
+      - my_network
+    depends_on:
+      - postgres
+
+  srv_client:
+    build:
+      context: ./
+      dockerfile: ./srv_client/Dockerfile
+    networks:
+      - my_network
+    depends_on:
+      srv_server:
+        condition: service_started
+    command: sh -c "sleep 10 && python main.py"
+
+  redis:
+    image: redis
+    ports:
+      - "6380:6379" 
+    networks:
+      - my_network
+
+  redis-cluster:
+    image: redis
+    command: redis-cluster
+    networks:
+      - my_network
+    ports:
+      - "7100-7105:7100-7105"  
+  redis-master:
+    image: redis
+    ports:
+      - "6381:6379"  
+    networks:
+      - my_network
+
+  redis-replica:
+    image: redis
+    command: redis-server --slaveof redis-master 6381
+    ports:
+      - "6382:6379"  
+    networks:
+      - my_network
+    depends_on:
+      - redis-master
+
+networks:
+  my_network:
+    driver: bridge
